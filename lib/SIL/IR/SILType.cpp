@@ -269,7 +269,9 @@ bool SILType::isPointerSizeAndAligned(SILModule &M,
                                       ResilienceExpansion expansion) const {
   auto &C = getASTContext();
   if (isHeapObjectReferenceType()
-      || getASTType()->isEqual(C.TheRawPointerType)) {
+      || getASTType()->isEqual(C.TheRawPointerType)
+      || getASTType()->isEqual(C.TheWasmExternRefType)
+      || getASTType()->isEqual(C.TheWasmExternRefTableType)) {
     return true;
   }
   if (auto intTy = dyn_cast<BuiltinIntegerType>(getASTType()))

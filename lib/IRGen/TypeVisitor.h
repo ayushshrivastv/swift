@@ -36,6 +36,8 @@ class ReferenceTypeVisitor : public CanTypeVisitor<ImplClass, RetTy, Args...> {
   TYPE(BuiltinFloat)
   TYPE(BuiltinInteger)
   TYPE(BuiltinRawPointer)
+  TYPE(BuiltinWasmExternRef)
+  TYPE(BuiltinWasmExternRefTable)
   TYPE(BuiltinVector)
   TYPE(LValue)
   TYPE(Metatype)

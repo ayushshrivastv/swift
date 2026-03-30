@@ -108,6 +108,8 @@ private:
   const LoadableTypeInfo *UnknownObjectTI = nullptr;
   const LoadableTypeInfo *BridgeObjectTI = nullptr;
   const LoadableTypeInfo *RawPointerTI = nullptr;
+  const LoadableTypeInfo *WasmExternRefTI = nullptr;
+  const LoadableTypeInfo *WasmExternRefTableTI = nullptr;
   const LoadableTypeInfo *RawUnsafeContinuationTI = nullptr;
   const LoadableTypeInfo *JobTI = nullptr;
   const LoadableTypeInfo *ExecutorTI = nullptr;
@@ -205,6 +207,8 @@ public:
   const LoadableTypeInfo &getBridgeObjectTypeInfo();
   const LoadableTypeInfo &getImplicitActorTypeInfo();
   const LoadableTypeInfo &getRawPointerTypeInfo();
+  const LoadableTypeInfo &getWasmExternRefTypeInfo();
+  const LoadableTypeInfo &getWasmExternRefTableTypeInfo();
   const LoadableTypeInfo &getRawUnsafeContinuationTypeInfo();
   const LoadableTypeInfo &getJobTypeInfo();
   const LoadableTypeInfo &getExecutorTypeInfo();
