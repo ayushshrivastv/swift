@@ -441,10 +441,8 @@ OmissionTypeName importer::getClangTypeNameForOmission(clang::ASTContext &ctx,
 #include "clang/Basic/RISCVVTypes.def"
       return OmissionTypeName();
 
-    // WASM builtin types that don't have Swift equivalents.
-#define WASM_TYPE(Name, Id, ...) case clang::BuiltinType::Id:
-#include "clang/Basic/WebAssemblyReferenceTypes.def"
-      return OmissionTypeName();
+    case clang::BuiltinType::WasmExternRef:
+      return OmissionTypeName("WasmExternref");
 
     // AMDGPU builtins that don't have Swift equivalents.
 #define AMDGPU_TYPE(Name, Id, ...) case clang::BuiltinType::Id:

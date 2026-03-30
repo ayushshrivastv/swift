@@ -1920,6 +1920,18 @@ namespace {
     }
 
     MetadataResponse
+    visitBuiltinWasmExternRefType(CanBuiltinWasmExternRefType type,
+                                  DynamicMetadataRequest request) {
+      return emitDirectMetadataRef(type);
+    }
+
+    MetadataResponse
+    visitBuiltinWasmExternRefTableType(CanBuiltinWasmExternRefTableType type,
+                                       DynamicMetadataRequest request) {
+      return emitDirectMetadataRef(type);
+    }
+
+    MetadataResponse
     visitBuiltinRawUnsafeContinuationType(CanBuiltinRawUnsafeContinuationType type,
                                           DynamicMetadataRequest request) {
       return emitDirectMetadataRef(type);

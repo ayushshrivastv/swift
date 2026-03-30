@@ -211,6 +211,72 @@ void irgen::emitBuiltinCall(IRGenFunction &IGF, const BuiltinInfo &Builtin,
     return;
   }
 
+  case BuiltinValueKind::WasmRefNullExtern: {
+    auto *call = IGF.Builder.CreateIntrinsicCall(
+        llvm::Intrinsic::wasm_ref_null_extern, {});
+    out.add(call);
+    return;
+  }
+
+  case BuiltinValueKind::WasmTableSizeExternRef: {
+    auto table = args.claimNext();
+    auto *call = IGF.Builder.CreateIntrinsicCall(
+        llvm::Intrinsic::wasm_table_size, {table});
+    out.add(call);
+    return;
+  }
+
+  case BuiltinValueKind::WasmTableGetExternRef: {
+    auto table = args.claimNext();
+    auto index = args.claimNext();
+    auto *call = IGF.Builder.CreateIntrinsicCall(
+        llvm::Intrinsic::wasm_table_get_externref, {table, index});
+    out.add(call);
+    return;
+  }
+
+  case BuiltinValueKind::WasmTableSetExternRef: {
+    auto table = args.claimNext();
+    auto index = args.claimNext();
+    auto value = args.claimNext();
+    IGF.Builder.CreateIntrinsicCall(
+        llvm::Intrinsic::wasm_table_set_externref, {table, index, value});
+    return;
+  }
+
+  case BuiltinValueKind::WasmTableGrowExternRef: {
+    auto table = args.claimNext();
+    auto value = args.claimNext();
+    auto delta = args.claimNext();
+    auto *call = IGF.Builder.CreateIntrinsicCall(
+        llvm::Intrinsic::wasm_table_grow_externref, {table, value, delta});
+    out.add(call);
+    return;
+  }
+
+  case BuiltinValueKind::WasmTableFillExternRef: {
+    auto table = args.claimNext();
+    auto index = args.claimNext();
+    auto value = args.claimNext();
+    auto count = args.claimNext();
+    IGF.Builder.CreateIntrinsicCall(
+        llvm::Intrinsic::wasm_table_fill_externref,
+        {table, index, value, count});
+    return;
+  }
+
+  case BuiltinValueKind::WasmTableCopyExternRef: {
+    auto destinationTable = args.claimNext();
+    auto sourceTable = args.claimNext();
+    auto sourceIndex = args.claimNext();
+    auto destinationIndex = args.claimNext();
+    auto count = args.claimNext();
+    IGF.Builder.CreateIntrinsicCall(
+        llvm::Intrinsic::wasm_table_copy,
+        {destinationTable, sourceTable, sourceIndex, destinationIndex, count});
+    return;
+  }
+
   // These builtins don't care about their argument:
   case BuiltinValueKind::Sizeof: {
     (void)args.claimAll();

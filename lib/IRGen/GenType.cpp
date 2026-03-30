@@ -61,6 +61,9 @@
 using namespace swift;
 using namespace irgen;
 
+static constexpr unsigned WasmTableAddressSpace = 1;
+static constexpr unsigned WasmExternRefAddressSpace = 10;
+
 Alignment IRGenModule::getCappedAlignment(Alignment align) {
   return std::min(align, Alignment(MaximumAlignment));
 }
@@ -1798,6 +1801,34 @@ const LoadableTypeInfo &TypeConverter::getRawPointerTypeInfo() {
   return *RawPointerTI;
 }
 
+const LoadableTypeInfo &IRGenModule::getWasmExternRefTypeInfo() {
+  return Types.getWasmExternRefTypeInfo();
+}
+
+const LoadableTypeInfo &TypeConverter::getWasmExternRefTypeInfo() {
+  if (WasmExternRefTI) return *WasmExternRefTI;
+  WasmExternRefTI = new RawPointerTypeInfo(
+      IGM.getOpaquePointerType(WasmExternRefAddressSpace),
+      IGM.getPointerSize(), IGM.getPointerAlignment());
+  WasmExternRefTI->NextConverted = FirstType;
+  FirstType = WasmExternRefTI;
+  return *WasmExternRefTI;
+}
+
+const LoadableTypeInfo &IRGenModule::getWasmExternRefTableTypeInfo() {
+  return Types.getWasmExternRefTableTypeInfo();
+}
+
+const LoadableTypeInfo &TypeConverter::getWasmExternRefTableTypeInfo() {
+  if (WasmExternRefTableTI) return *WasmExternRefTableTI;
+  WasmExternRefTableTI = new RawPointerTypeInfo(
+      IGM.getOpaquePointerType(WasmTableAddressSpace),
+      IGM.getPointerSize(), IGM.getPointerAlignment());
+  WasmExternRefTableTI->NextConverted = FirstType;
+  FirstType = WasmExternRefTableTI;
+  return *WasmExternRefTableTI;
+}
+
 const LoadableTypeInfo &IRGenModule::getRawUnsafeContinuationTypeInfo() {
   return Types.getRawUnsafeContinuationTypeInfo();
 }
@@ -2183,6 +2214,12 @@ convertPrimitiveBuiltin(IRGenModule &IGM, CanType canTy) {
   case TypeKind::BuiltinRawPointer:
     return RetTy{ IGM.Int8PtrTy, IGM.getPointerSize(),
                   IGM.getPointerAlignment() };
+  case TypeKind::BuiltinWasmExternRefTable:
+    return RetTy{ IGM.getOpaquePointerType(WasmTableAddressSpace),
+                  IGM.getPointerSize(), IGM.getPointerAlignment() };
+  case TypeKind::BuiltinWasmExternRef:
+    return RetTy{ IGM.getOpaquePointerType(WasmExternRefAddressSpace),
+                  IGM.getPointerSize(), IGM.getPointerAlignment() };
   case TypeKind::BuiltinFloat:
     switch (cast<BuiltinFloatType>(ty)->getFPKind()) {
     case BuiltinFloatType::IEEE16:
@@ -2283,6 +2320,10 @@ const TypeInfo *TypeConverter::convertType(CanType ty) {
                            getFixedBufferAlignment(IGM));
   case TypeKind::BuiltinRawPointer:
     return &getRawPointerTypeInfo();
+  case TypeKind::BuiltinWasmExternRefTable:
+    return &getWasmExternRefTableTypeInfo();
+  case TypeKind::BuiltinWasmExternRef:
+    return &getWasmExternRefTypeInfo();
   case TypeKind::BuiltinRawUnsafeContinuation:
     return &getRawUnsafeContinuationTypeInfo();
   case TypeKind::BuiltinJob:

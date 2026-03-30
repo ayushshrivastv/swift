@@ -2018,6 +2018,8 @@ private:
     case TypeKind::BuiltinNativeObject:
     case TypeKind::BuiltinBridgeObject:
     case TypeKind::BuiltinRawPointer:
+    case TypeKind::BuiltinWasmExternRef:
+    case TypeKind::BuiltinWasmExternRefTable:
     case TypeKind::BuiltinRawUnsafeContinuation:
     case TypeKind::BuiltinJob: {
       unsigned PtrSize =

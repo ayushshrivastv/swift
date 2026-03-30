@@ -941,6 +941,22 @@ public:
     return getRecursiveProperties().hasUnboundGeneric();
   }
 
+  /// Determine whether this type contains a WebAssembly externref, either
+  /// directly as a builtin or via the standard library wrapper.
+  bool containsWasmExternref() const;
+
+  /// Determine whether this type contains an unsafe pointer whose pointee
+  /// contains a WebAssembly externref.
+  bool containsWasmExternrefPointer() const;
+
+  /// Determine whether this type contains a WebAssembly externref table,
+  /// either directly as a builtin or via the standard library wrapper.
+  bool containsWasmExternrefTable() const;
+
+  /// Determine whether this type contains an unsafe pointer whose pointee
+  /// contains a WebAssembly externref table.
+  bool containsWasmExternrefTablePointer() const;
+
   /// Determine whether this type contains an error type.
   bool hasError() const {
     return getRecursiveProperties().hasError();
@@ -1943,6 +1959,34 @@ public:
   }
 };
 DEFINE_EMPTY_CAN_TYPE_WRAPPER(BuiltinRawPointerType, BuiltinType)
+
+/// BuiltinWasmExternRefType - The builtin WebAssembly externref type.
+/// In LLVM IR, this is represented as a pointer in the reserved externref
+/// address space.
+class BuiltinWasmExternRefType : public BuiltinType {
+  friend class ASTContext;
+  BuiltinWasmExternRefType(const ASTContext &C)
+    : BuiltinType(TypeKind::BuiltinWasmExternRef, C) {}
+public:
+  static bool classof(const TypeBase *T) {
+    return T->getKind() == TypeKind::BuiltinWasmExternRef;
+  }
+};
+DEFINE_EMPTY_CAN_TYPE_WRAPPER(BuiltinWasmExternRefType, BuiltinType)
+
+/// BuiltinWasmExternRefTableType - The builtin WebAssembly externref table
+/// type. In LLVM IR, this is represented as a pointer in the reserved table
+/// address space.
+class BuiltinWasmExternRefTableType : public BuiltinType {
+  friend class ASTContext;
+  BuiltinWasmExternRefTableType(const ASTContext &C)
+    : BuiltinType(TypeKind::BuiltinWasmExternRefTable, C) {}
+public:
+  static bool classof(const TypeBase *T) {
+    return T->getKind() == TypeKind::BuiltinWasmExternRefTable;
+  }
+};
+DEFINE_EMPTY_CAN_TYPE_WRAPPER(BuiltinWasmExternRefTableType, BuiltinType)
 
 /// BuiltinRawContinuationType - The builtin raw unsafe continuation type.
 /// In C, this is a non-null AsyncTask*.  This pointer is completely

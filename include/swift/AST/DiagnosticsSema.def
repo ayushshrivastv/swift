@@ -660,6 +660,12 @@ ERROR(expr_keypath_noncopyable_type,none,
       "key path cannot refer to noncopyable type %0", (Type))
 ERROR(expr_keypath_nonescapable_type,none,
       "key path cannot refer to nonescapable type %0", (Type))
+ERROR(expr_inout_wasm_externref,none,
+      "cannot pass value of type %0 as 'inout'; WebAssembly references are not addressable",
+      (Type))
+ERROR(expr_inout_wasm_table,none,
+      "cannot pass value of type %0 as 'inout'; WebAssembly tables are not addressable",
+      (Type))
 ERROR(expr_keypath_not_property,none,
       "%select{key path|dynamic key path member lookup}1 cannot refer to %kind0",
       (const ValueDecl *, bool))
@@ -5205,6 +5211,12 @@ ERROR(capture_across_type_decl,none,
       "%kindonly0 declaration cannot close over value %base1 defined in outer "
       "scope",
       (const NominalTypeDecl *, const ValueDecl *))
+ERROR(capture_wasm_externref,none,
+      "cannot capture value of type %0; WebAssembly references cannot be stored in closure contexts",
+      (Type))
+ERROR(capture_wasm_table,none,
+      "cannot capture value of type %0; WebAssembly tables cannot be stored in closure contexts",
+      (Type))
 
 ERROR(isolated_any_conversion_to_synchronous_func,none,
       "converting @isolated(any) function of type %0 to synchronous function type %1 is not allowed",
@@ -6385,6 +6397,30 @@ ERROR(recursive_enum_not_indirect,none,
       "recursive enum %0 is not marked 'indirect'", (Type))
 ERROR(unsupported_infinitely_sized_type,none,
       "value type %0 has infinite size", (Type))
+ERROR(wasm_externref_pointer_type,none,
+      "type %0 cannot contain a pointer to a WebAssembly reference",
+      (Type))
+ERROR(wasm_table_pointer_type,none,
+      "type %0 cannot contain a pointer to a WebAssembly table",
+      (Type))
+ERROR(wasm_externref_storage,none,
+      "%select{stored property|static property|global variable}0 cannot have type %1; WebAssembly references cannot be stored in Swift memory",
+      (unsigned, Type))
+ERROR(wasm_table_storage,none,
+      "%select{local variable|stored property|static property|global variable}0 cannot have type %1; WebAssembly tables are not Swift values",
+      (unsigned, Type))
+ERROR(wasm_externref_variadic,none,
+      "parameter %0 cannot be variadic because type %1 contains a WebAssembly reference",
+      (Identifier, Type))
+ERROR(wasm_externref_inout_parameter,none,
+      "'inout' parameter %0 cannot have type %1; WebAssembly references are not addressable",
+      (Identifier, Type))
+ERROR(wasm_table_parameter,none,
+      "parameter %0 cannot have type %1; WebAssembly tables cannot be passed as Swift values",
+      (Identifier, Type))
+ERROR(wasm_table_result_type,none,
+      "result type %0 cannot contain a WebAssembly table",
+      (Type))
 NOTE(note_type_cycle_starts_here,none,
      "cycle beginning here: %0", (StringRef))
 NOTE(note_recursive_enum_case_here,none,

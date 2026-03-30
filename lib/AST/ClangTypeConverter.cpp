@@ -789,6 +789,12 @@ ClangTypeConverter::visitBuiltinRawPointerType(BuiltinRawPointerType *type) {
   return ClangASTContext.VoidPtrTy;
 }
 
+clang::QualType ClangTypeConverter::visitBuiltinWasmExternRefType(
+    BuiltinWasmExternRefType *) {
+  return getClangBuiltinTypeFromKind(ClangASTContext,
+                                     clang::BuiltinType::WasmExternRef);
+}
+
 clang::QualType
 ClangTypeConverter::visitBuiltinIntegerType(BuiltinIntegerType *type) {
   auto &clangCtx = ClangASTContext;
@@ -962,6 +968,10 @@ clang::QualType ClangTypeConverter::convertTemplateArgument(Type type) {
 
   if (auto pointerType = type->getAs<BuiltinRawPointerType>())
     return withCache([&]() { return visitBuiltinRawPointerType(pointerType); });
+
+  if (auto externRefType = type->getAs<BuiltinWasmExternRefType>())
+    return withCache(
+        [&]() { return visitBuiltinWasmExternRefType(externRefType); });
 
   if (auto integerType = type->getAs<BuiltinIntegerType>())
     return withCache([&]() { return visitBuiltinIntegerType(integerType); });

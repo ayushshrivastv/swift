@@ -47,6 +47,14 @@ BUILTIN_CAST_OR_BITCAST_OPERATION(TruncOrBitCast, "truncOrBitCast", "n")
 BUILTIN_CAST_OR_BITCAST_OPERATION(ZExtOrBitCast,  "zextOrBitCast",  "n")
 BUILTIN_CAST_OR_BITCAST_OPERATION(SExtOrBitCast,  "sextOrBitCast",  "n")
 
+BUILTIN(WasmRefNullExtern, "wasmRefNullExtern", "n")
+BUILTIN(WasmTableSizeExternRef, "wasmTableSizeExternRef", "")
+BUILTIN(WasmTableGetExternRef, "wasmTableGetExternRef", "")
+BUILTIN(WasmTableSetExternRef, "wasmTableSetExternRef", "")
+BUILTIN(WasmTableGrowExternRef, "wasmTableGrowExternRef", "")
+BUILTIN(WasmTableFillExternRef, "wasmTableFillExternRef", "")
+BUILTIN(WasmTableCopyExternRef, "wasmTableCopyExternRef", "")
+
 /// Binary operations have type (T,T) -> T.
 ///
 /// We define two different sorts of operations varying when T is static,

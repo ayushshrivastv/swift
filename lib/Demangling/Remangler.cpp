@@ -930,6 +930,10 @@ ManglingError Remangler::mangleBuiltinTypeName(Node *node, unsigned depth) {
     Buffer << 'o';
   } else if (text == BUILTIN_TYPE_NAME_RAWPOINTER) {
     Buffer << 'p';
+  } else if (text == BUILTIN_TYPE_NAME_WASMEXTERNREF) {
+    Buffer << 'r';
+  } else if (text == BUILTIN_TYPE_NAME_WASMEXTERNREFTABLE) {
+    Buffer << 'Q';
   } else if (text == BUILTIN_TYPE_NAME_RAWUNSAFECONTINUATION) {
     Buffer << 'c';
   } else if (text == BUILTIN_TYPE_NAME_JOB) {

@@ -6718,6 +6718,8 @@ public:
     Printer << buffer;                                                         \
   }
   ASTPRINTER_PRINT_BUILTINTYPE(BuiltinRawPointerType)
+  ASTPRINTER_PRINT_BUILTINTYPE(BuiltinWasmExternRefType)
+  ASTPRINTER_PRINT_BUILTINTYPE(BuiltinWasmExternRefTableType)
   ASTPRINTER_PRINT_BUILTINTYPE(BuiltinRawUnsafeContinuationType)
   ASTPRINTER_PRINT_BUILTINTYPE(BuiltinJobType)
   ASTPRINTER_PRINT_BUILTINTYPE(BuiltinExecutorType)

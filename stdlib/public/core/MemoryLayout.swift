@@ -167,6 +167,68 @@ extension MemoryLayout where T: ~Copyable & ~Escapable {
   }
 }
 
+#if hasFeature(WasmExternref)
+extension MemoryLayout where T == WasmExternref {
+  @available(*, unavailable,
+    message: "WebAssembly references do not have a Swift memory layout")
+  public static var size: Int { 0 }
+
+  @available(*, unavailable,
+    message: "WebAssembly references do not have a Swift memory layout")
+  public static var stride: Int { 0 }
+
+  @available(*, unavailable,
+    message: "WebAssembly references do not have a Swift memory layout")
+  public static var alignment: Int { 0 }
+
+  @available(*, unavailable,
+    message: "WebAssembly references do not have a Swift memory layout")
+  public static func size(ofValue value: borrowing T) -> Int { 0 }
+
+  @available(*, unavailable,
+    message: "WebAssembly references do not have a Swift memory layout")
+  public static func stride(ofValue value: borrowing T) -> Int { 0 }
+
+  @available(*, unavailable,
+    message: "WebAssembly references do not have a Swift memory layout")
+  public static func alignment(ofValue value: borrowing T) -> Int { 0 }
+
+  @available(*, unavailable,
+    message: "WebAssembly references do not have a Swift memory layout")
+  public static func offset(of key: PartialKeyPath<T>) -> Int? { nil }
+}
+
+extension MemoryLayout where T == WasmExternrefTable {
+  @available(*, unavailable,
+    message: "WebAssembly tables do not have a Swift memory layout")
+  public static var size: Int { 0 }
+
+  @available(*, unavailable,
+    message: "WebAssembly tables do not have a Swift memory layout")
+  public static var stride: Int { 0 }
+
+  @available(*, unavailable,
+    message: "WebAssembly tables do not have a Swift memory layout")
+  public static var alignment: Int { 0 }
+
+  @available(*, unavailable,
+    message: "WebAssembly tables do not have a Swift memory layout")
+  public static func size(ofValue value: borrowing T) -> Int { 0 }
+
+  @available(*, unavailable,
+    message: "WebAssembly tables do not have a Swift memory layout")
+  public static func stride(ofValue value: borrowing T) -> Int { 0 }
+
+  @available(*, unavailable,
+    message: "WebAssembly tables do not have a Swift memory layout")
+  public static func alignment(ofValue value: borrowing T) -> Int { 0 }
+
+  @available(*, unavailable,
+    message: "WebAssembly tables do not have a Swift memory layout")
+  public static func offset(of key: PartialKeyPath<T>) -> Int? { nil }
+}
+#endif
+
 extension MemoryLayout {
   /// Returns the offset of an inline stored property within a type's in-memory
   /// representation.
