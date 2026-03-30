@@ -492,6 +492,118 @@ static void checkInheritanceClause(
   }
 }
 
+static bool diagnoseWasmExternrefPointerType(ASTContext &ctx, SourceLoc loc,
+                                             Type type) {
+  if (!type || !type->containsWasmExternrefPointer())
+    return false;
+
+  ctx.Diags.diagnose(loc, diag::wasm_externref_pointer_type, type);
+  return true;
+}
+
+static bool diagnoseWasmExternrefTablePointerType(ASTContext &ctx, SourceLoc loc,
+                                                  Type type) {
+  if (!type || !type->containsWasmExternrefTablePointer())
+    return false;
+
+  ctx.Diags.diagnose(loc, diag::wasm_table_pointer_type, type);
+  return true;
+}
+
+static bool shouldDiagnoseWasmExternrefStorage(VarDecl *var) {
+  if (!var->hasStorage() || !var->getInterfaceType() ||
+      !var->getInterfaceType()->containsWasmExternref()) {
+    return false;
+  }
+
+  auto *dc = var->getDeclContext();
+  if (dc->isTypeContext()) {
+    if (var->isStatic())
+      return true;
+
+    auto *nominal = dc->getSelfNominalTypeDecl();
+    return !(nominal && nominal->getName().is("WasmExternref") &&
+             nominal->getModuleContext()->isStdlibModule());
+  }
+
+  return var->isGlobalStorage();
+}
+
+static bool diagnoseWasmExternrefStorage(VarDecl *var) {
+  if (!shouldDiagnoseWasmExternrefStorage(var))
+    return false;
+
+  unsigned kind = 2;
+  if (var->getDeclContext()->isTypeContext())
+    kind = var->isStatic() ? 1 : 0;
+
+  var->diagnose(diag::wasm_externref_storage, kind, var->getInterfaceType());
+  return true;
+}
+
+static bool shouldDiagnoseWasmExternrefTableStorage(VarDecl *var) {
+  if (!var->hasStorage() || !var->getInterfaceType() ||
+      !var->getInterfaceType()->containsWasmExternrefTable()) {
+    return false;
+  }
+
+  if (var->hasClangNode())
+    return false;
+
+  auto *dc = var->getDeclContext();
+  if (dc->isTypeContext()) {
+    if (var->isStatic())
+      return true;
+
+    auto *nominal = dc->getSelfNominalTypeDecl();
+    return !(nominal && nominal->getName().is("WasmExternrefTable") &&
+             nominal->getModuleContext()->isStdlibModule());
+  }
+
+  if (dc->isLocalContext())
+    return true;
+
+  return var->isGlobalStorage();
+}
+
+static bool diagnoseWasmExternrefTableStorage(VarDecl *var) {
+  if (!shouldDiagnoseWasmExternrefTableStorage(var))
+    return false;
+
+  unsigned kind = 3;
+  if (var->getDeclContext()->isLocalContext()) {
+    kind = 0;
+  } else if (var->getDeclContext()->isTypeContext()) {
+    kind = var->isStatic() ? 2 : 1;
+  }
+
+  var->diagnose(diag::wasm_table_storage, kind, var->getInterfaceType());
+  return true;
+}
+
+static bool diagnoseWasmExternrefResultType(ValueDecl *decl, Type type,
+                                            SourceLoc loc) {
+  if (!type)
+    return false;
+
+  return diagnoseWasmExternrefPointerType(decl->getASTContext(), loc, type);
+}
+
+static bool diagnoseWasmExternrefTableResultType(ValueDecl *decl, Type type,
+                                                 SourceLoc loc) {
+  if (!type || decl->getModuleContext()->isStdlibModule())
+    return false;
+
+  if (diagnoseWasmExternrefTablePointerType(decl->getASTContext(), loc, type))
+    return true;
+
+  if (!type->containsWasmExternrefTable())
+    return false;
+
+  decl->getASTContext().Diags.diagnose(loc, diag::wasm_table_result_type, type);
+  return true;
+}
+
 static void installCodingKeysIfNecessary(NominalTypeDecl *NTD) {
   auto req =
     ResolveImplicitMemberRequest{NTD, ImplicitMemberAction::ResolveCodingKeys};
@@ -2446,6 +2558,20 @@ public:
       this->visitBoundVariable(var);
     });
 
+    if (diagnoseWasmExternrefPointerType(Ctx, VD->getLoc(),
+                                         VD->getInterfaceType()))
+      VD->setInvalid();
+
+    if (diagnoseWasmExternrefStorage(VD))
+      VD->setInvalid();
+
+    if (diagnoseWasmExternrefTablePointerType(Ctx, VD->getLoc(),
+                                              VD->getInterfaceType()))
+      VD->setInvalid();
+
+    if (diagnoseWasmExternrefTableStorage(VD))
+      VD->setInvalid();
+
     // Reject cases where this is a variable that has storage but it isn't
     // allowed.
     if (VD->hasStorage()) {
@@ -2870,6 +2996,14 @@ public:
     (void) SD->getImplInfo();
 
     TypeChecker::checkParameterList(SD->getIndices(), SD);
+
+    if (diagnoseWasmExternrefResultType(SD, SD->getElementInterfaceType(),
+                                        SD->getLoc()))
+      SD->setInvalid();
+
+    if (diagnoseWasmExternrefTableResultType(SD, SD->getElementInterfaceType(),
+                                             SD->getLoc()))
+      SD->setInvalid();
 
     checkDefaultArguments(SD->getIndices());
     checkVariadicParameters(SD->getIndices(), SD);
@@ -3562,6 +3696,14 @@ public:
       }
 
       TypeChecker::checkParameterList(FD->getParameters(), FD);
+
+      if (diagnoseWasmExternrefResultType(FD, FD->getResultInterfaceType(),
+                                          FD->getLoc()))
+        FD->setInvalid();
+
+      if (diagnoseWasmExternrefTableResultType(FD, FD->getResultInterfaceType(),
+                                               FD->getLoc()))
+        FD->setInvalid();
     }
 
     checkAccessControl(FD);
@@ -4238,6 +4380,36 @@ void TypeChecker::checkParameterList(ParameterList *params,
             .fixItRemove(attr->getRange());
         }
       }
+    }
+
+    auto interfaceType = param->getInterfaceType();
+    if (diagnoseWasmExternrefPointerType(owner->getASTContext(), param->getLoc(),
+                                         interfaceType))
+      param->setInvalid();
+
+    if (diagnoseWasmExternrefTablePointerType(owner->getASTContext(),
+                                              param->getLoc(), interfaceType))
+      param->setInvalid();
+
+    if (interfaceType && interfaceType->containsWasmExternref()) {
+      if (param->isVariadic()) {
+        param->diagnose(diag::wasm_externref_variadic, param->getName(),
+                        interfaceType);
+        param->setInvalid();
+      }
+
+      if (param->isInOut()) {
+        param->diagnose(diag::wasm_externref_inout_parameter, param->getName(),
+                        interfaceType);
+        param->setInvalid();
+      }
+    }
+
+    if (interfaceType && interfaceType->containsWasmExternrefTable() &&
+        !param->getModuleContext()->isStdlibModule()) {
+      param->diagnose(diag::wasm_table_parameter, param->getName(),
+                      interfaceType);
+      param->setInvalid();
     }
 
     // @_staticExclusiveOnly types cannot be passed as 'inout', only as either

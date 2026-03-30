@@ -338,6 +338,23 @@ static void diagSyntacticUseRestrictions(const Expr *E, const DeclContext *DC,
         checkBorrowExpr(borrowExpr);
       }
 
+      if (auto *inOutExpr = dyn_cast<InOutExpr>(E)) {
+        auto inOutType = inOutExpr->getSubExpr()->getType();
+        if (inOutType && inOutType->containsWasmExternref()) {
+          Ctx.Diags.diagnose(inOutExpr->getLoc(),
+                             diag::expr_inout_wasm_externref,
+                             inOutType->getInOutObjectType()
+                                 ? inOutType->getInOutObjectType()
+                                 : inOutType);
+        }
+        if (inOutType && inOutType->containsWasmExternrefTable()) {
+          Ctx.Diags.diagnose(inOutExpr->getLoc(), diag::expr_inout_wasm_table,
+                             inOutType->getInOutObjectType()
+                                 ? inOutType->getInOutObjectType()
+                                 : inOutType);
+        }
+      }
+
       return Action::Continue(E);
     }
 

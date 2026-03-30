@@ -238,6 +238,20 @@ public:
       }
     }
 
+    if (VD->getInterfaceType() &&
+        VD->getInterfaceType()->containsWasmExternref()) {
+      Context.Diags.diagnose(capture.getLoc(), diag::capture_wasm_externref,
+                             VD->getInterfaceType());
+      return;
+    }
+
+    if (VD->getInterfaceType() &&
+        VD->getInterfaceType()->containsWasmExternrefTable()) {
+      Context.Diags.diagnose(capture.getLoc(), diag::capture_wasm_table,
+                             VD->getInterfaceType());
+      return;
+    }
+
     // Check to see if we already have an entry for this decl.
     unsigned &entryNumber = captureEntryNumber[VD];
     if (entryNumber == 0) {
