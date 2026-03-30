@@ -242,6 +242,8 @@ bool CanType::isReferenceTypeImpl(CanType type, const GenericSignatureImpl *sig,
   case TypeKind::BuiltinIntegerLiteral:
   case TypeKind::BuiltinFloat:
   case TypeKind::BuiltinRawPointer:
+  case TypeKind::BuiltinWasmExternRef:
+  case TypeKind::BuiltinWasmExternRefTable:
   case TypeKind::BuiltinRawUnsafeContinuation:
   case TypeKind::BuiltinJob:
   case TypeKind::BuiltinExecutor:
@@ -766,6 +768,36 @@ static bool isLegalFormalType(CanType type) {
 
 bool TypeBase::isLegalFormalType() {
   return ::isLegalFormalType(getCanonicalType());
+}
+
+bool TypeBase::containsWasmExternref() const {
+  return Type(const_cast<TypeBase *>(this)).findIf([](Type subTy) -> bool {
+    return subTy->is<BuiltinWasmExternRefType>() || subTy->isWasmExternref();
+  });
+}
+
+bool TypeBase::containsWasmExternrefPointer() const {
+  return Type(const_cast<TypeBase *>(this)).findIf([](Type subTy) -> bool {
+    PointerTypeKind pointerKind;
+    auto pointeeTy = subTy->getAnyPointerElementType(pointerKind);
+    return pointeeTy && pointeeTy->containsWasmExternref();
+  });
+}
+
+bool TypeBase::containsWasmExternrefTable() const {
+  return Type(const_cast<TypeBase *>(this)).findIf([](Type subTy) -> bool {
+    return subTy->is<BuiltinWasmExternRefTableType>() ||
+           subTy->getAnyNominal() ==
+               subTy->getASTContext().getWasmExternrefTableDecl();
+  });
+}
+
+bool TypeBase::containsWasmExternrefTablePointer() const {
+  return Type(const_cast<TypeBase *>(this)).findIf([](Type subTy) -> bool {
+    PointerTypeKind pointerKind;
+    auto pointeeTy = subTy->getAnyPointerElementType(pointerKind);
+    return pointeeTy && pointeeTy->containsWasmExternrefTable();
+  });
 }
 
 bool TypeBase::hasTypeRepr() const {
@@ -4717,6 +4749,8 @@ ReferenceCounting TypeBase::getReferenceCounting() {
   case TypeKind::BuiltinIntegerLiteral:
   case TypeKind::BuiltinFloat:
   case TypeKind::BuiltinRawPointer:
+  case TypeKind::BuiltinWasmExternRef:
+  case TypeKind::BuiltinWasmExternRefTable:
   case TypeKind::BuiltinRawUnsafeContinuation:
   case TypeKind::BuiltinJob:
   case TypeKind::BuiltinExecutor:

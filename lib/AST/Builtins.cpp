@@ -66,6 +66,9 @@ Type swift::getBuiltinType(ASTContext &Context, StringRef Name) {
           .Case("Borrow", BuiltinTypeKind::BuiltinBorrow)
           .StartsWith("Vec", BuiltinTypeKind::BuiltinVector)
           .Case("RawPointer", BuiltinTypeKind::BuiltinRawPointer)
+          .Case("WasmExternRef", BuiltinTypeKind::BuiltinWasmExternRef)
+          .Case("WasmExternRefTable",
+                BuiltinTypeKind::BuiltinWasmExternRefTable)
           .Case("RawUnsafeContinuation",
                 BuiltinTypeKind::BuiltinRawUnsafeContinuation)
           .Case("Job", BuiltinTypeKind::BuiltinJob)
@@ -125,6 +128,10 @@ Type swift::getBuiltinType(ASTContext &Context, StringRef Name) {
   }
   case BuiltinTypeKind::BuiltinRawPointer:
     return Context.TheRawPointerType;
+  case BuiltinTypeKind::BuiltinWasmExternRef:
+    return Context.TheWasmExternRefType;
+  case BuiltinTypeKind::BuiltinWasmExternRefTable:
+    return Context.TheWasmExternRefTableType;
   case BuiltinTypeKind::BuiltinRawUnsafeContinuation:
     return Context.TheRawUnsafeContinuationType;
   case BuiltinTypeKind::BuiltinJob:
@@ -869,6 +876,66 @@ namespace {
 static BuiltinFunctionBuilder::ConcreteGenerator
 makeConcrete(Type type) {
   return { type };
+}
+
+static ValueDecl *getWasmRefNullExtern(ASTContext &ctx, Identifier id) {
+  BuiltinFunctionBuilder builder(ctx);
+  builder.setResult(makeConcrete(ctx.TheWasmExternRefType));
+  return builder.build(id);
+}
+
+static ValueDecl *getWasmTableSizeExternRef(ASTContext &ctx, Identifier id) {
+  BuiltinFunctionBuilder builder(ctx);
+  builder.addParameter(makeConcrete(ctx.TheWasmExternRefTableType));
+  builder.setResult(makeConcrete(BuiltinIntegerType::get(32, ctx)));
+  return builder.build(id);
+}
+
+static ValueDecl *getWasmTableGetExternRef(ASTContext &ctx, Identifier id) {
+  BuiltinFunctionBuilder builder(ctx);
+  builder.addParameter(makeConcrete(ctx.TheWasmExternRefTableType));
+  builder.addParameter(makeConcrete(BuiltinIntegerType::get(32, ctx)));
+  builder.setResult(makeConcrete(ctx.TheWasmExternRefType));
+  return builder.build(id);
+}
+
+static ValueDecl *getWasmTableSetExternRef(ASTContext &ctx, Identifier id) {
+  BuiltinFunctionBuilder builder(ctx);
+  builder.addParameter(makeConcrete(ctx.TheWasmExternRefTableType));
+  builder.addParameter(makeConcrete(BuiltinIntegerType::get(32, ctx)));
+  builder.addParameter(makeConcrete(ctx.TheWasmExternRefType));
+  builder.setResult(makeConcrete(ctx.TheEmptyTupleType));
+  return builder.build(id);
+}
+
+static ValueDecl *getWasmTableGrowExternRef(ASTContext &ctx, Identifier id) {
+  BuiltinFunctionBuilder builder(ctx);
+  builder.addParameter(makeConcrete(ctx.TheWasmExternRefTableType));
+  builder.addParameter(makeConcrete(ctx.TheWasmExternRefType));
+  builder.addParameter(makeConcrete(BuiltinIntegerType::get(32, ctx)));
+  builder.setResult(makeConcrete(BuiltinIntegerType::get(32, ctx)));
+  return builder.build(id);
+}
+
+static ValueDecl *getWasmTableFillExternRef(ASTContext &ctx, Identifier id) {
+  BuiltinFunctionBuilder builder(ctx);
+  builder.addParameter(makeConcrete(ctx.TheWasmExternRefTableType));
+  builder.addParameter(makeConcrete(BuiltinIntegerType::get(32, ctx)));
+  builder.addParameter(makeConcrete(ctx.TheWasmExternRefType));
+  builder.addParameter(makeConcrete(BuiltinIntegerType::get(32, ctx)));
+  builder.setResult(makeConcrete(ctx.TheEmptyTupleType));
+  return builder.build(id);
+}
+
+static ValueDecl *getWasmTableCopyExternRef(ASTContext &ctx, Identifier id) {
+  BuiltinFunctionBuilder builder(ctx);
+  builder.addParameter(makeConcrete(ctx.TheWasmExternRefTableType));
+  builder.addParameter(makeConcrete(ctx.TheWasmExternRefTableType));
+  builder.addParameter(makeConcrete(BuiltinIntegerType::get(32, ctx)));
+  builder.addParameter(makeConcrete(BuiltinIntegerType::get(32, ctx)));
+  builder.addParameter(makeConcrete(BuiltinIntegerType::get(32, ctx)));
+  builder.setResult(makeConcrete(ctx.TheEmptyTupleType));
+  return builder.build(id);
 }
 
 static BuiltinFunctionBuilder::ParameterGenerator
@@ -3398,6 +3465,28 @@ ValueDecl *swift::getBuiltinValueDecl(ASTContext &Context, Identifier Id) {
   case BuiltinValueKind::GlobalStringTablePointer:
     return getGlobalStringTablePointer(Context, Id);
 
+  case BuiltinValueKind::WasmRefNullExtern:
+    if (!Types.empty()) return nullptr;
+    return getWasmRefNullExtern(Context, Id);
+  case BuiltinValueKind::WasmTableSizeExternRef:
+    if (!Types.empty()) return nullptr;
+    return getWasmTableSizeExternRef(Context, Id);
+  case BuiltinValueKind::WasmTableGetExternRef:
+    if (!Types.empty()) return nullptr;
+    return getWasmTableGetExternRef(Context, Id);
+  case BuiltinValueKind::WasmTableSetExternRef:
+    if (!Types.empty()) return nullptr;
+    return getWasmTableSetExternRef(Context, Id);
+  case BuiltinValueKind::WasmTableGrowExternRef:
+    if (!Types.empty()) return nullptr;
+    return getWasmTableGrowExternRef(Context, Id);
+  case BuiltinValueKind::WasmTableFillExternRef:
+    if (!Types.empty()) return nullptr;
+    return getWasmTableFillExternRef(Context, Id);
+  case BuiltinValueKind::WasmTableCopyExternRef:
+    if (!Types.empty()) return nullptr;
+    return getWasmTableCopyExternRef(Context, Id);
+
   case BuiltinValueKind::ConvertStrongToUnownedUnsafe:
     return getConvertStrongToUnownedUnsafe(Context, Id);
 
@@ -3638,6 +3727,8 @@ bool BuiltinType::isBitwiseCopyable() const {
   case BuiltinTypeKind::BuiltinFloat:
   case BuiltinTypeKind::BuiltinPackIndex:
   case BuiltinTypeKind::BuiltinRawPointer:
+  case BuiltinTypeKind::BuiltinWasmExternRef:
+  case BuiltinTypeKind::BuiltinWasmExternRefTable:
   case BuiltinTypeKind::BuiltinVector:
   case BuiltinTypeKind::BuiltinExecutor:
   case BuiltinTypeKind::BuiltinJob:
@@ -3677,6 +3768,12 @@ StringRef BuiltinType::getTypeName(SmallVectorImpl<char> &result,
   switch (getBuiltinTypeKind()) {
   case BuiltinTypeKind::BuiltinRawPointer:
     printer << MAYBE_GET_NAMESPACED_BUILTIN(BUILTIN_TYPE_NAME_RAWPOINTER);
+    break;
+  case BuiltinTypeKind::BuiltinWasmExternRef:
+    printer << MAYBE_GET_NAMESPACED_BUILTIN(BUILTIN_TYPE_NAME_WASMEXTERNREF);
+    break;
+  case BuiltinTypeKind::BuiltinWasmExternRefTable:
+    printer << MAYBE_GET_NAMESPACED_BUILTIN(BUILTIN_TYPE_NAME_WASMEXTERNREFTABLE);
     break;
   case BuiltinTypeKind::BuiltinRawUnsafeContinuation:
     printer << MAYBE_GET_NAMESPACED_BUILTIN(BUILTIN_TYPE_NAME_RAWUNSAFECONTINUATION);

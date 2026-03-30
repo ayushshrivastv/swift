@@ -1452,6 +1452,10 @@ void ASTMangler::appendType(Type type, GenericSignature sig,
       return appendOperator("BP");
     case TypeKind::BuiltinRawPointer:
       return appendOperator("Bp");
+    case TypeKind::BuiltinWasmExternRef:
+      return appendOperator("Br");
+    case TypeKind::BuiltinWasmExternRefTable:
+      return appendOperator("BQ");
     case TypeKind::BuiltinRawUnsafeContinuation:
       return appendOperator("Bc");
     case TypeKind::BuiltinNativeObject:

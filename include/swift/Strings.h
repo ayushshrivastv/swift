@@ -151,6 +151,12 @@ constexpr static BuiltinNameStringLiteral BUILTIN_TYPE_NAME_IMPLICITACTOR = {
 /// The name of the Builtin type for RawPointer
 constexpr static BuiltinNameStringLiteral BUILTIN_TYPE_NAME_RAWPOINTER = {
     "Builtin.RawPointer"};
+/// The name of the Builtin type for WasmExternRef
+constexpr static BuiltinNameStringLiteral BUILTIN_TYPE_NAME_WASMEXTERNREF = {
+    "Builtin.WasmExternRef"};
+/// The name of the Builtin type for WasmExternRefTable
+constexpr static BuiltinNameStringLiteral BUILTIN_TYPE_NAME_WASMEXTERNREFTABLE = {
+    "Builtin.WasmExternRefTable"};
 /// The name of the Builtin type for RawUnsafeContinuation
 constexpr static BuiltinNameStringLiteral BUILTIN_TYPE_NAME_RAWUNSAFECONTINUATION = {
     "Builtin.RawUnsafeContinuation"};
