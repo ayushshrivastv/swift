@@ -169,6 +169,124 @@ public struct OpaquePointer {
 @available(*, unavailable)
 extension OpaquePointer: Sendable {}
 
+#if hasFeature(WasmExternref)
+/// A wrapper around a WebAssembly `externref` value.
+///
+/// `externref` values are used to represent host references in WebAssembly.
+@frozen
+@unsafe
+public struct WasmExternref {
+  @usableFromInline
+  internal var _rawValue: Builtin.WasmExternRef
+
+  @usableFromInline @_transparent
+  internal init(_ v: Builtin.WasmExternRef) {
+    unsafe self._rawValue = v
+  }
+}
+
+@available(*, unavailable)
+extension WasmExternref: Sendable {}
+
+extension WasmExternref {
+  /// A null WebAssembly `externref` value.
+  @_transparent
+  public static var null: WasmExternref {
+    WasmExternref(Builtin.wasmRefNullExtern())
+  }
+}
+
+/// A wrapper around an index into a WebAssembly `externref` table.
+@frozen
+public struct WasmExternrefIndex: Sendable, Hashable {
+  public var rawValue: UInt32
+
+  @_transparent
+  public init(rawValue: UInt32) {
+    self.rawValue = rawValue
+  }
+}
+
+/// A wrapper around a WebAssembly `externref` table handle.
+@frozen
+@unsafe
+public struct WasmExternrefTable {
+  @usableFromInline
+  internal var _rawValue: Builtin.WasmExternRefTable
+
+  @usableFromInline @_transparent
+  internal init(_ v: Builtin.WasmExternRefTable) {
+    unsafe self._rawValue = v
+  }
+}
+
+@available(*, unavailable)
+extension WasmExternrefTable: Sendable {}
+
+extension WasmExternrefTable {
+  /// Returns the current number of entries in the table.
+  @_transparent
+  public func size() -> WasmExternrefIndex {
+    WasmExternrefIndex(
+      rawValue: UInt32(Builtin.wasmTableSizeExternRef(_rawValue)))
+  }
+
+  /// Reads an `externref` from the table.
+  @_transparent
+  public func get(_ index: WasmExternrefIndex) -> WasmExternref {
+    WasmExternref(
+      Builtin.wasmTableGetExternRef(_rawValue, index.rawValue._value))
+  }
+
+  /// Stores an `externref` into the table.
+  @_transparent
+  public func set(_ value: WasmExternref, at index: WasmExternrefIndex) {
+    Builtin.wasmTableSetExternRef(
+      _rawValue, index.rawValue._value, value._rawValue)
+  }
+
+  /// Grows the table by `delta` entries and returns the previous size on
+  /// success, or `nil` if the grow operation fails.
+  @_transparent
+  public func grow(
+    by delta: UInt32,
+    with value: WasmExternref = .null
+  ) -> WasmExternrefIndex? {
+    let previousSize = Int32(
+      Builtin.wasmTableGrowExternRef(_rawValue, value._rawValue, delta._value))
+    if previousSize < 0 {
+      return nil
+    }
+    return WasmExternrefIndex(rawValue: UInt32(bitPattern: previousSize))
+  }
+
+  /// Fills a range of table entries with the same value.
+  @_transparent
+  public func fill(
+    startingAt index: WasmExternrefIndex,
+    with value: WasmExternref,
+    count: UInt32
+  ) {
+    Builtin.wasmTableFillExternRef(
+      _rawValue, index.rawValue._value, value._rawValue, count._value)
+  }
+
+  /// Copies entries from a source table into this table.
+  @_transparent
+  public func copy(
+    from source: WasmExternrefTable,
+    sourceIndex: WasmExternrefIndex,
+    to destinationIndex: WasmExternrefIndex,
+    count: UInt32
+  ) {
+    Builtin.wasmTableCopyExternRef(
+      _rawValue, source._rawValue,
+      sourceIndex.rawValue._value, destinationIndex.rawValue._value,
+      count._value)
+  }
+}
+#endif
+
 extension OpaquePointer {
   /// Creates a new `OpaquePointer` from the given address, specified as a bit
   /// pattern.
