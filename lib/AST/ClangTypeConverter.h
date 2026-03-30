@@ -155,6 +155,7 @@ private:
   clang::QualType visitProtocolCompositionType(ProtocolCompositionType *type);
   clang::QualType visitExistentialType(ExistentialType *type);
   clang::QualType visitBuiltinRawPointerType(BuiltinRawPointerType *type);
+  clang::QualType visitBuiltinWasmExternRefType(BuiltinWasmExternRefType *type);
   clang::QualType visitBuiltinIntegerType(BuiltinIntegerType *type);
   clang::QualType visitBuiltinFloatType(BuiltinFloatType *type);
   clang::QualType visitBuiltinVectorType(BuiltinVectorType *type);

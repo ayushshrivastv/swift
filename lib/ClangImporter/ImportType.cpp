@@ -365,10 +365,6 @@ namespace {
 #include "clang/Basic/RISCVVTypes.def"
         return Type();
 
-#define WASM_TYPE(Name, Id, Size) case clang::BuiltinType::Id:
-#include "clang/Basic/WebAssemblyReferenceTypes.def"
-        return Type();
-
       // AMDGPU builtin types that don't have Swift equivalents.
 #define AMDGPU_TYPE(Name, Id, SingletonId, Width, Align)                       \
       case clang::BuiltinType::Id:
@@ -664,10 +660,6 @@ namespace {
     }
 
     ImportResult VisitConstantArrayType(const clang::ConstantArrayType *type) {
-      // FIXME: Map to a real fixed-size Swift array type when we have those.
-      // Importing as a tuple at least fills the right amount of space, and
-      // we can cheese static-offset "indexing" using .$n operations.
-
       Type elementType = Impl.importTypeIgnoreIUO(
           type->getElementType(), ImportTypeKind::Value, addImportDiagnostic,
           AllowNSUIntegerAsInt, Bridgeability::None, ImportTypeAttrs());
@@ -675,6 +667,15 @@ namespace {
         return Type();
 
       auto size = type->getSize().getZExtValue();
+
+      if (size == 0 && elementType->isWasmExternref()) {
+        if (auto tableDecl = Impl.SwiftContext.getWasmExternrefTableDecl())
+          return tableDecl->getDeclaredInterfaceType();
+      }
+
+      // FIXME: Map to a real fixed-size Swift array type when we have those.
+      // Importing as a tuple at least fills the right amount of space, and
+      // we can cheese static-offset "indexing" using .$n operations.
 
       // An array of size N is imported as an N-element tuple which
       // takes very long to compile. We chose 4096 as the upper limit because

@@ -61,6 +61,7 @@ MAP_BUILTIN_TYPE(Half,       CFloat16)
 MAP_BUILTIN_TYPE(Float,      CFloat)
 MAP_BUILTIN_TYPE(Double,     CDouble)
 MAP_BUILTIN_TYPE(LongDouble, CLongDouble)
+MAP_BUILTIN_TYPE(WasmExternRef, WasmExternref)
 
 #undef MAP_BUILTIN_TYPE
 #undef MAP_BUILTIN_INTEGER_TYPE
